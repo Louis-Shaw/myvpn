@@ -23,7 +23,8 @@ class EventLoop():
         self.input_list.remove(fileno)
         self.output_list.remove(fileno)
         self.error_list.remove(fileno)
-        self._fdmap[fileno] = None
+        if self._fdmap.has_key(fileno):
+            del self._fdmap[fileno]
 
     def restartloop(self):
         print('loop now', self.input_list)

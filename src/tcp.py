@@ -7,18 +7,30 @@ class TcpRelay(object):
     self.local_conn = None
     self.remote_conn = None
     self.is_local = True
-
-    def __init__(self, conn, is_local, loop):
+    self.state = None
+    def __init__(self, conn, is_local, loop, config):
         self.is_local = is_local
         self.local_conn = conn.fileno()
         self.loop = loop
+        self.config = config
         loop.add_loop(conn, POLL_IN)
 
 
     def handle_event(conn, event):
         if event == POLL_IN:
-            if is_local:
+            if self.is_local:
                 data = conn.recv(1024)
+                res = socket.getaddrinfo(self.config.host, self.config.port,
+                socket.AF_INET, socket.SOCK_STREAM)
+                if len(res):
+                    fml, t, ptcl, cname, addr = res[0]
+                    conn = socket.socket(fml, t, ptcl)
+                    conn.connect(addr)
+                    conn.sendall(data)
+                    #TODO: add to loop and wait data from remote
+        if event == POLL_OUT:
+            if self.is_local:
+                data = 
             
     def test(self):
         cf = configparser.ConfigParser()
