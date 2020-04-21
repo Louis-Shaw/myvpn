@@ -7,31 +7,52 @@ class TcpRelay(object):
     self.local_conn = None
     self.remote_conn = None
     self.is_local = True
-    self.state = None
+    self.state = INIT_CONN
+    self.data = None
+    self.loop = None
     def __init__(self, conn, is_local, loop, config):
         self.is_local = is_local
         self.local_conn = conn.fileno()
         self.loop = loop
         self.config = config
+        self.state = WAIT_TO_READ
         loop.add_loop(conn, POLL_IN)
 
+    def handle_local_read(conn):
+        #read data 
+        #create remote conn 
+        #put conn into loop 
+        self.data = conn.recv(1024)
+        res = socket.getaddrinfo(self.config.remote_ip
+        , self.config.remote_port)
+        if len(res):
+            fa, t, prtl, cn, addr = res[0]
+            sock = socket.socket(fa, t, prtl)
+            rmt_conn = sock.connect(addr)
+            self.loop.add_loop(rmt_conn, POLL_OUT)
+
+    def handle_local_write(conn):
+        #
+        pass
+
+    def handle_remote_read(conn):
+        pass
+
+    def handle_remote_write(conn):
+        pass
 
     def handle_event(conn, event):
+        conn_fileno = conn.fileno()
         if event == POLL_IN:
-            if self.is_local:
-                data = conn.recv(1024)
-                res = socket.getaddrinfo(self.config.host, self.config.port,
-                socket.AF_INET, socket.SOCK_STREAM)
-                if len(res):
-                    fml, t, ptcl, cname, addr = res[0]
-                    conn = socket.socket(fml, t, ptcl)
-                    conn.connect(addr)
-                    conn.sendall(data)
-                    #TODO: add to loop and wait data from remote
+            if conn_fileno == self.local_conn:
+                self.handle_local_read(conn)
+            if conn_fileno == self.remote_conn:
+                self.handle_remote_read(conn)
         if event == POLL_OUT:
-            if self.is_local:
-                data = 
-            
+            if conn_fileno == self.local_conn:
+                self.handle_local_write(conn)
+            if conn_fileno == self.remote_conn:
+                self.handle_remote_write(conn)
     def test(self):
         cf = configparser.ConfigParser()
         cf.read(os.path.split(os.path.realpath(__file__))[0] +
