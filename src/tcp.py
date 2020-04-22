@@ -10,36 +10,48 @@ class TcpRelay(object):
     self.state = INIT_CONN
     self.data = None
     self.loop = None
+
     def __init__(self, conn, is_local, loop, config):
         self.is_local = is_local
         self.local_conn = conn.fileno()
         self.loop = loop
         self.config = config
         self.state = WAIT_TO_READ
-        loop.add_loop(conn, POLL_IN)
+        loop.add_loop(conn, POLL_IN, self)
 
     def handle_local_read(conn):
-        #read data 
-        #create remote conn 
-        #put conn into loop 
+        #read data
+        #create remote conn
+        #put conn into loop
         self.data = conn.recv(1024)
-        res = socket.getaddrinfo(self.config.remote_ip
-        , self.config.remote_port)
+
+        if not self.remote_conn:
+            self.create_remote_conn()
+        self.loop.remove_loop(conn)
+        self.loop.add_loop(self.remote_conn, POLL_OUT, self)
+
+    def create_remote_conn():
+        res = socket.getaddrinfo(self.config.remote_ip,self.config.remote_port)
         if len(res):
             fa, t, prtl, cn, addr = res[0]
             sock = socket.socket(fa, t, prtl)
             rmt_conn = sock.connect(addr)
-            self.loop.add_loop(rmt_conn, POLL_OUT)
+            self.remote_conn = rmt_conn
 
     def handle_local_write(conn):
-        #
-        pass
+        conn.sendall(self.data)
+        self.loop.remove_loop(conn)
+        self.loop.add_loop(conn, POLL_IN, self)
 
     def handle_remote_read(conn):
-        pass
+        self.data = conn.recv(1024)
+        self.loop.remove_loop(conn)
+        self.loop.add_loop(self.local_conn, POLL_OUT, self)
 
     def handle_remote_write(conn):
-        pass
+        conn.sendall(self.data)
+        self.loop.remove_loop(conn)
+        self.loop.add_loop(self.remote_conn, POLL_IN, self)
 
     def handle_event(conn, event):
         conn_fileno = conn.fileno()

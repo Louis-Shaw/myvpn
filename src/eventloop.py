@@ -8,7 +8,7 @@ class EventLoop():
         self.error_list = []
         self._fdmap = {}
 
-    def add_loop(self, conn, event):
+    def add_loop(self, conn, event, handle):
         fileno = conn.fileno()
         print(fileno)
         if event == POLL_IN:
@@ -18,15 +18,18 @@ class EventLoop():
         self.error_list.append(fileno)
         self._fdmap[fileno] = (conn, handle)
 
-    def remove_loop(self, conn, event):
+    def remove_loop(self, conn):
         fileno = conn.fileno()
-        self.input_list.remove(fileno)
-        self.output_list.remove(fileno)
-        self.error_list.remove(fileno)
+        if fileno in self.input_list:
+            self.input_list.remove(fileno)
+        if fileno in self.output_list:
+            self.output_list.remove(fileno)
+        if fileno in self.error_list:
+            self.error_list.remove(fileno)
         if self._fdmap.has_key(fileno):
             del self._fdmap[fileno]
 
-    def restartloop(self):
+    def restart_loop(self):
         print('loop now', self.input_list)
         while True:
             rr, rw, re = select.select(self.input_list, [], self.error_list)

@@ -26,8 +26,8 @@ class Local:
         local.listen(1024)
         self.local_socket = local.fileno()
         self.loop = EventLoop()
-        self.loop.addtoloop(local, self)
-        self.loop.restartloop()
+        self.loop.add_loop(local, self)
+        self.loop.restart_loop()
 
     def handle_event(self, sock, event):
         if sock.fileno() == self.local_socket:
@@ -35,7 +35,7 @@ class Local:
             relay = TcpRelay(sock, is_local)
             print('create accept')
             conn, addr = sock.accept()
-            self.loop.addtoloop(conn, self)
+            self.loop.add_loop(conn, self)
 
 if __name__ == '__main__':
     lc = Local()
