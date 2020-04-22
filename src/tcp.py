@@ -4,12 +4,6 @@ from constants import *
 import os
 
 class TcpRelay(object):
-    self.local_conn = None
-    self.remote_conn = None
-    self.is_local = True
-    self.state = INIT_CONN
-    self.data = None
-    self.loop = None
 
     def __init__(self, conn, is_local, loop, config):
         self.is_local = is_local
@@ -17,43 +11,52 @@ class TcpRelay(object):
         self.loop = loop
         self.config = config
         self.state = WAIT_TO_READ
+        self.remote_conn = None
         loop.add_loop(conn, POLL_IN, self)
 
-    def handle_local_read(conn):
+    def handle_local_read(self, conn):
         #read data
         #create remote conn
         #put conn into loop
         self.data = conn.recv(1024)
-
+        print(self.data)
         if not self.remote_conn:
             self.create_remote_conn()
         self.loop.remove_loop(conn)
         self.loop.add_loop(self.remote_conn, POLL_OUT, self)
 
-    def create_remote_conn():
-        res = socket.getaddrinfo(self.config.remote_ip,self.config.remote_port)
+    def create_remote_conn(self):
+        request_host = self.config.remote_ip
+        request_port = self.config.remote_port
+        if not is_local:
+            request_host = 'www.baidu.com'
+            request_port = 80
+        if not self.data:
+            #TODO raise exception
+            return
+        res = socket.getaddrinfo(request_host, request_port)
         if len(res):
             fa, t, prtl, cn, addr = res[0]
             sock = socket.socket(fa, t, prtl)
             rmt_conn = sock.connect(addr)
             self.remote_conn = rmt_conn
 
-    def handle_local_write(conn):
+    def handle_local_write(self, conn):
         conn.sendall(self.data)
         self.loop.remove_loop(conn)
         self.loop.add_loop(conn, POLL_IN, self)
 
-    def handle_remote_read(conn):
+    def handle_remote_read(self, conn):
         self.data = conn.recv(1024)
         self.loop.remove_loop(conn)
         self.loop.add_loop(self.local_conn, POLL_OUT, self)
 
-    def handle_remote_write(conn):
+    def handle_remote_write(self, conn):
         conn.sendall(self.data)
         self.loop.remove_loop(conn)
         self.loop.add_loop(self.remote_conn, POLL_IN, self)
 
-    def handle_event(conn, event):
+    def handle_event(self, conn, event):
         conn_fileno = conn.fileno()
         if event == POLL_IN:
             if conn_fileno == self.local_conn:

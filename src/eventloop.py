@@ -34,15 +34,15 @@ class EventLoop():
         while True:
             rr, rw, re = select.select(self.input_list, [], self.error_list)
             if rr:
-                print('rr')
+                print('rr list')
                 for i in rr:
                     conn, handler = self._fdmap[i]
-                    handler.eventHandler(conn, POLL_IN)
+                    handler.handle_event(conn, POLL_IN)
             if rw:
                 print('rw')
                 for i in rw:
                     conn, handle = self._fdmap[i]
-                    handler.eventHandler(conn, POLL_OUT)
+                    handler.handle_event(conn, POLL_OUT)
             if re:
                 print('error')
 
