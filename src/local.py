@@ -28,17 +28,18 @@ class Local:
         local.bind((self.local_ip, int(self.local_port)))
         local.listen(1024)
         self.local_socket = local.fileno()
+        print('local socket ', self.local_socket)
         self.loop = EventLoop()
         self.loop.add_loop(local, POLL_IN, self)
+        import pdb;pdb.set_trace()
         self.loop.restart_loop()
 
     def handle_event(self, sock, event):
         if sock.fileno() == self.local_socket:
             # new a socket and put it in loop
-            relay = TcpRelay(sock, self.is_local, self.loop, self.config)
-            print('create accept')
+            print('create accept' )
             conn, addr = sock.accept()
-            self.loop.add_loop(conn, POLL_IN, relay)
+            relay = TcpRelay(conn, self.is_local, self.loop, self.config)
 
 if __name__ == '__main__':
     lc = Local()

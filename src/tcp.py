@@ -19,15 +19,15 @@ class TcpRelay(object):
         #create remote conn
         #put conn into loop
         self.data = conn.recv(1024)
-        print(self.data)
+        print( 'localdata ', self.data)
         if not self.remote_conn:
             self.create_remote_conn()
         self.loop.remove_loop(conn)
         self.loop.add_loop(self.remote_conn, POLL_OUT, self)
 
     def create_remote_conn(self):
-        request_host = self.config.remote_ip
-        request_port = self.config.remote_port
+        request_host = self.config.get('remote_ip', '')
+        request_port = self.config.get('remote_port', '')
         if not is_local:
             request_host = 'www.baidu.com'
             request_port = 80
@@ -57,6 +57,7 @@ class TcpRelay(object):
         self.loop.add_loop(self.remote_conn, POLL_IN, self)
 
     def handle_event(self, conn, event):
+        print('tcp handle event', conn)
         conn_fileno = conn.fileno()
         if event == POLL_IN:
             if conn_fileno == self.local_conn:
