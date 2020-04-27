@@ -28,7 +28,7 @@ class TcpRelay(object):
     def create_remote_conn(self):
         request_host = self.config.get('remote_ip', '')
         request_port = self.config.get('remote_port', '')
-        if not is_local:
+        if not self.is_local:
             request_host = 'www.baidu.com'
             request_port = 80
         if not self.data:
@@ -38,6 +38,7 @@ class TcpRelay(object):
         if len(res):
             fa, t, prtl, cn, addr = res[0]
             sock = socket.socket(fa, t, prtl)
+            print(addr)
             rmt_conn = sock.connect(addr)
             self.remote_conn = rmt_conn
 

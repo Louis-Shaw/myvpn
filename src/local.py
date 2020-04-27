@@ -31,7 +31,6 @@ class Local:
         print('local socket ', self.local_socket)
         self.loop = EventLoop()
         self.loop.add_loop(local, POLL_IN, self)
-        import pdb;pdb.set_trace()
         self.loop.restart_loop()
 
     def handle_event(self, sock, event):
