@@ -36,7 +36,7 @@ class Local:
     def handle_event(self, sock, event):
         if sock.fileno() == self.local_socket:
             # new a socket and put it in loop
-            print('create accept' )
+            print('server accept' )
             conn, addr = sock.accept()
             relay = TcpRelay(conn, self.is_local, self.loop, self.config)
 

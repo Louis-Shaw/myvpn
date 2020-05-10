@@ -10,8 +10,8 @@ class Server(object):
         cf = configparser.ConfigParser()
         cfpath = os.path.split(os.path.realpath(__file__))[0]+ '/config.conf'
         cf.read(cfpath)
-        self.config = cf.sections()
-        self.is_local = True
+        self.config = None
+        self.is_local = False
         self.loop = None
         self.local_socket = None
         self.local_ip = cf.get('server', 'local_ip')
@@ -30,11 +30,9 @@ class Server(object):
 
     def handle_event(self, sock, event):
         if sock.fileno() == self.server_socket:
-            relay = TcpRelay(sock, is_local)
             print('server create accept')
             conn, addr = sock.accept()
-            self.loop.add_loop(conn, POLL_IN)
-
+            relay = TcpRelay(conn, self.is_local, self.loop, self.config)
 
 if __name__ == '__main__':
     server = Server()
