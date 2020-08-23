@@ -4,6 +4,10 @@ import os
 from eventloop import EventLoop
 from tcp import TcpRelay
 from constants import *
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 
 class Server(object):
     def __init__(self):
@@ -30,7 +34,7 @@ class Server(object):
 
     def handle_event(self, sock, event):
         if sock.fileno() == self.server_socket:
-            print('server create accept')
+            logging.info('server create accept')
             conn, addr = sock.accept()
             relay = TcpRelay(conn, self.is_local, self.loop, self.config)
 

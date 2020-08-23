@@ -4,6 +4,9 @@ import os
 from eventloop import EventLoop
 from tcp import TcpRelay
 from constants import *
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 class Local:
     def __init__(self):
@@ -28,15 +31,16 @@ class Local:
         local.bind((self.local_ip, int(self.local_port)))
         local.listen(1024)
         self.local_socket = local.fileno()
-        print('local socket ', self.local_socket)
+        logging.info('local socket ', self.local_socket)
         self.loop = EventLoop()
         self.loop.add_loop(local, POLL_IN, self)
         self.loop.restart_loop()
 
     def handle_event(self, sock, event):
         if sock.fileno() == self.local_socket:
-            # new a socket and put it in loop
-            print('server accept' )
+            # Everytime recieve a connection request:
+            # Init a socket and put it in loop
+            logging.info('local accept' )
             conn, addr = sock.accept()
             relay = TcpRelay(conn, self.is_local, self.loop, self.config)
 

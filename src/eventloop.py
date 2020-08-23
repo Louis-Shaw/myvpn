@@ -1,5 +1,6 @@
 import select
 from constants import *
+import logging
 
 class EventLoop():
     def __init__(self):
@@ -10,7 +11,7 @@ class EventLoop():
 
     def add_loop(self, conn, event, handle):
         fileno = conn.fileno()
-        print( 'add to loop :', fileno , event)
+        logging.info( 'add to loop :', fileno , event)
         if event == POLL_IN:
             self.input_list.add(fileno)
         if event == POLL_OUT:
@@ -20,7 +21,7 @@ class EventLoop():
 
     def remove_loop(self, conn):
         fileno = conn.fileno()
-        print('remove loop', fileno)
+        logging.info('remove loop', fileno)
         if fileno in self.input_list:
             self.input_list.remove(fileno)
         if fileno in self.output_list:
@@ -31,22 +32,24 @@ class EventLoop():
             del self._fdmap[fileno]
 
     def restart_loop(self):
-        print('loop now', self.input_list)
+        logging.info('loop now', self.input_list)
         while True:
             rr, rw, re = select.select(self.input_list, self.output_list,
                 self.error_list)
             if rr:
-                print('rr list' ,rr)
+                logging.info('rr list' ,rr)
                 for i in rr:
                     conn, handler = self._fdmap[i]
                     handler.handle_event(conn, POLL_IN)
             if rw:
-                print('rw')
+                logging.info('rw')
                 for i in rw:
                     conn, handle = self._fdmap[i]
                     handler.handle_event(conn, POLL_OUT)
             if re:
-                print('error')
+                logging.info('error')
 
-    def close_sock(self, sock):
-        self.removeloop(sock)
+    def close_sock(self, conn):
+        self.remove_loop(conn)
+        if conn.fileno():
+            conn.close()
